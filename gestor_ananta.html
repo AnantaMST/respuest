@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestor de Comentarios — Maestro Ananta</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--sage:#7a8c6e;--sage-l:#a8b89a;--sage-dim:rgba(122,140,110,0.12);--earth:#8b6f4e;--cream:#f5f0e8;--cream2:#ede6d8;--stone:#2c2a26;--mid:#5a5650;--dim:#8a8680;--mist:#e8ede4;--border:rgba(122,140,110,0.18);--white:#fff;--urgent:#c0392b;--urgent-bg:#fdf0ef;--heart:#c0395a;--heart-bg:#fdf0f4;--blue:#2980b9;--blue-bg:#eaf4fb;--gold:#c9a84c;--gold-bg:rgba(201,168,76,0.12);--green:#2e7d32;--green-bg:#e8f5e9;--shadow:0 2px 16px rgba(44,42,38,.06);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--stone);font-size:14px;min-height:100vh;}
+
+/* HEADER */
+header{background:rgba(245,240,232,.97);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-mark{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--sage),var(--earth));display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:16px;color:white;font-style:italic;}
+.logo-name{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:300;}
+.logo-name b{color:var(--sage);font-style:italic;font-weight:300;}
+.hpills{display:flex;gap:8px;align-items:center;}
+.hpill{font-size:11px;padding:4px 12px;border-radius:20px;border:1px solid var(--border);color:var(--mid);background:var(--mist);font-weight:500;letter-spacing:.04em;}
+.hpill.active{background:var(--sage);color:white;border-color:var(--sage);}
+
+/* LAYOUT */
+.layout{display:flex;height:calc(100vh - 56px);}
+
+/* SIDEBAR */
+.sb{width:290px;flex-shrink:0;border-right:1px solid var(--border);background:var(--white);display:flex;flex-direction:column;overflow:hidden;}
+.sb-sec{padding:14px;border-bottom:1px solid var(--border);}
+.sb-label{font-size:10px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;}
+
+/* DROP ZONE */
+.drop{border:1.5px dashed var(--sage-l);border-radius:10px;padding:16px 12px;text-align:center;cursor:pointer;transition:all .2s;background:var(--cream);}
+.drop:hover,.drop.drag{border-color:var(--sage);background:var(--mist);border-style:solid;}
+.drop-icon{font-size:20px;margin-bottom:5px;}
+.drop-text{font-size:12px;color:var(--mid);line-height:1.5;}
+.drop-text strong{color:var(--sage);display:block;font-size:13px;margin-bottom:2px;}
+input[type=file]{display:none;}
+
+/* STATUS BADGES */
+.sbadge{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:5px 10px;border-radius:8px;margin-top:8px;line-height:1.4;}
+.sb-ok{background:var(--green-bg);color:var(--green);}
+.sb-warn{background:#fff8e1;color:#7a5c00;border:1px solid #ffe082;}
+.sb-err{background:var(--urgent-bg);color:var(--urgent);}
+
+/* FILTER TABS */
+.ftabs{display:flex;gap:4px;padding:10px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.tab{font-size:11px;padding:4px 9px;border-radius:14px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--mid);font-family:'DM Sans',sans-serif;transition:all .15s;font-weight:500;white-space:nowrap;}
+.tab.active{background:var(--sage);color:white;border-color:var(--sage);}
+.tab.t-urg.active{background:var(--urgent);border-color:var(--urgent);}
+
+/* SORT */
+.sort-row{display:flex;gap:5px;padding:7px 14px 9px;border-bottom:1px solid var(--border);}
+.sort-btn{font-size:11px;padding:4px 9px;border-radius:6px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--dim);font-family:'DM Sans',sans-serif;transition:all .15s;}
+.sort-btn.active{border-color:var(--sage-l);color:var(--sage);background:var(--mist);}
+
+/* COMMENT LIST */
+.clist{flex:1;overflow-y:auto;}
+.ci{padding:9px 14px;border-bottom:1px solid rgba(122,140,110,.07);cursor:pointer;transition:background .12s;display:flex;align-items:flex-start;gap:7px;}
+.ci:hover{background:var(--cream);}
+.ci.done{opacity:.4;}
+.ci.u-urg{border-left:3px solid var(--urgent);padding-left:11px;}
+.icb{width:14px;height:14px;accent-color:var(--sage);cursor:pointer;flex-shrink:0;margin-top:2px;}
+.ibody{flex:1;min-width:0;}
+.iaut{font-size:11px;font-weight:600;color:var(--stone);margin-bottom:2px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
+.itxt{font-size:11px;color:var(--mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.idate{font-size:10px;color:var(--dim);margin-top:2px;}
+.bm{font-size:9px;font-weight:600;padding:1px 5px;border-radius:7px;letter-spacing:.04em;text-transform:uppercase;}
+.bm-u{background:var(--urgent-bg);color:var(--urgent);}
+.bm-c{background:var(--heart-bg);color:var(--heart);}
+.bm-d{background:var(--green-bg);color:var(--green);}
+.bm-g{background:var(--gold-bg);color:#7a5c00;}
+.empty-sb{padding:36px 14px;text-align:center;font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:300;color:var(--dim);line-height:1.8;}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.toolbar{padding:10px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;background:var(--white);flex-shrink:0;flex-wrap:wrap;}
+.btn{font-size:12px;padding:7px 13px;border-radius:7px;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;font-weight:500;transition:all .15s;display:flex;align-items:center;gap:5px;white-space:nowrap;}
+.btn-p{background:linear-gradient(135deg,var(--sage),#5e7252);color:white;}
+.btn-p:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(122,140,110,.35);}
+.btn-p:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none;}
+.btn-s{background:var(--cream);color:var(--mid);border:1px solid var(--border);}
+.btn-s:hover{background:var(--mist);color:var(--sage);}
+.tinfo{font-size:12px;color:var(--dim);margin-left:auto;}
+
+/* SELECT ALL ROW */
+.sel-row{padding:7px 18px;background:var(--mist);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;font-size:12px;color:var(--mid);}
+.sa-cb{accent-color:var(--sage);width:14px;height:14px;cursor:pointer;}
+.sel-cnt{font-weight:600;color:var(--sage);}
+
+/* CONTENT */
+.area{flex:1;overflow-y:auto;padding:20px;}
+
+/* WELCOME */
+.welcome{max-width:500px;margin:50px auto;text-align:center;}
+.welcome h1{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;margin-bottom:10px;}
+.welcome p{font-size:13px;color:var(--mid);line-height:1.7;margin-bottom:6px;}
+.steps{text-align:left;background:var(--mist);border-radius:10px;padding:16px 20px;margin-top:16px;}
+.steps li{font-size:13px;color:var(--mid);margin-bottom:6px;list-style:none;}
+.steps li::before{content:"✦ ";color:var(--sage);}
+
+/* BATCH HEADER */
+.bhdr{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:14px;box-shadow:var(--shadow);}
+.bstats{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;}
+.sbox{text-align:center;}
+.sn{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:300;}
+.sl{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;}
+.ctx-prev{margin-top:10px;padding:9px 13px;background:var(--mist);border-radius:8px;font-size:12px;color:var(--mid);line-height:1.6;border-left:3px solid var(--sage);}
+.ctx-prev strong{color:var(--stone);display:block;margin-bottom:3px;}
+
+/* CARDS */
+.cc{background:var(--white);border:1px solid var(--border);border-radius:12px;margin-bottom:11px;box-shadow:var(--shadow);overflow:hidden;transition:box-shadow .2s;}
+.cc:hover{box-shadow:0 4px 22px rgba(44,42,38,.09);}
+.cc.urg{border-left:4px solid var(--urgent);}
+.cc.done-c{opacity:.45;}
+.cc.ck-c{border-color:var(--sage);box-shadow:0 0 0 1.5px var(--sage-l);}
+.ct{padding:13px 16px 10px;display:flex;align-items:flex-start;gap:9px;border-bottom:1px solid rgba(122,140,110,.07);}
+.cc-cb{width:15px;height:15px;accent-color:var(--sage);cursor:pointer;flex-shrink:0;margin-top:3px;}
+.av{width:32px;height:32px;border-radius:50%;flex-shrink:0;background:var(--sage-dim);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--sage);overflow:hidden;}
+.av img{width:100%;height:100%;object-fit:cover;}
+.cm{flex:1;}
+.ca{font-size:13px;font-weight:600;color:var(--stone);margin-bottom:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.cd{font-size:11px;color:var(--dim);}
+.ctxt{font-size:14px;color:var(--stone);line-height:1.6;padding:11px 16px;}
+.ab{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;letter-spacing:.05em;text-transform:uppercase;}
+.ab-r{background:var(--blue-bg);color:var(--blue);}
+.ab-h{background:var(--heart-bg);color:var(--heart);}
+.ab-l{background:var(--gold-bg);color:#8b6a00;}
+.ab-i{background:var(--cream2);color:var(--dim);}
+.ab-u{background:var(--urgent-bg);color:var(--urgent);}
+.ra{padding:13px 16px;background:var(--mist);border-top:1px solid var(--border);}
+.rl{font-size:10px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}
+.rt{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:300;line-height:1.8;color:var(--stone);white-space:pre-wrap;padding:11px 13px;background:var(--white);border-radius:8px;border:1px solid var(--border);margin-bottom:7px;}
+.rn{font-size:11px;color:var(--dim);font-style:italic;margin-bottom:7px;}
+.ract{display:flex;gap:6px;flex-wrap:wrap;}
+.skip-r{padding:9px 16px;background:var(--cream);border-top:1px solid var(--border);font-size:12px;color:var(--dim);font-style:italic;}
+.gind{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--sage);padding:11px 14px;background:var(--mist);border-top:1px solid var(--border);}
+.dp{display:flex;gap:4px;}
+.dp span{width:6px;height:6px;border-radius:50%;background:var(--sage);animation:pu 1.2s infinite;}
+.dp span:nth-child(2){animation-delay:.2s;}.dp span:nth-child(3){animation-delay:.4s;}
+@keyframes pu{0%,80%,100%{transform:scale(.6);opacity:.4}40%{transform:scale(1);opacity:1}}
+.spinner{width:14px;height:14px;border:2px solid rgba(122,140,110,.3);border-top-color:var(--sage);border-radius:50%;animation:sp .7s linear infinite;display:inline-block;}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* POPUP */
+.pop-ov{display:none;position:fixed;inset:0;background:rgba(44,42,38,.45);z-index:500;align-items:center;justify-content:center;}
+.pop-ov.show{display:flex;}
+.pop{background:var(--white);border-radius:14px;padding:28px 30px;max-width:340px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(44,42,38,.2);}
+.pop h3{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;margin-bottom:8px;}
+.pop p{font-size:13px;color:var(--mid);line-height:1.6;margin-bottom:18px;}
+.pop-icon{font-size:34px;margin-bottom:10px;}
+
+/* GUIONES PANEL */
+.guiones-panel{flex:1;overflow-y:auto;padding:24px;}
+.g-card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:var(--shadow);}
+.g-title{font-size:13px;font-weight:500;color:var(--stone);margin-bottom:2px;}
+.g-meta{font-size:11px;color:var(--dim);}
+.g-del{background:none;border:none;cursor:pointer;font-size:16px;color:var(--dim);padding:4px;border-radius:4px;transition:color .15s;}
+.g-del:hover{color:var(--urgent);}
+.g-drop-big{border:2px dashed var(--sage-l);border-radius:12px;padding:40px 24px;text-align:center;cursor:pointer;transition:all .2s;background:var(--cream);margin-bottom:16px;}
+.g-drop-big:hover,.g-drop-big.drag{border-color:var(--sage);background:var(--mist);border-style:solid;}
+.g-drop-icon{font-size:36px;margin-bottom:10px;}
+.g-drop-text{font-size:14px;color:var(--mid);line-height:1.6;}
+.g-drop-text strong{color:var(--sage);display:block;font-size:15px;margin-bottom:4px;}
+
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--sage-l);border-radius:2px;}
+
+/* ACTION LABELS */
+.ra-label{font-size:13px;font-weight:600;padding:6px 12px;border-radius:8px;display:inline-flex;align-items:center;gap:6px;margin-bottom:5px;}
+.ra-corazon{background:var(--heart-bg);color:var(--heart);}
+.ra-like{background:var(--gold-bg);color:#8b6a00;}
+.ra-ignorar{background:var(--cream2);color:var(--dim);}
+.ra-sublabel{font-size:12px;color:var(--mid);font-style:italic;}
+
+/* LAYOUT: sidebar always visible + guion panel side by side */
+.sb-guion{width:290px;flex-shrink:0;border-right:1px solid var(--border);background:var(--white);display:flex;flex-direction:column;overflow:hidden;}
+.sb-guion-top{padding:12px 14px;border-bottom:1px solid var(--border);background:var(--mist);}
+.sb-guion-list{flex:1;overflow-y:auto;padding:10px 14px;}
+.g-card-sm{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:7px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+.g-card-sm.active{border-color:var(--sage);background:var(--mist);}
+.g-title-sm{font-size:11px;font-weight:500;color:var(--stone);line-height:1.4;margin-bottom:2px;}
+.g-meta-sm{font-size:10px;color:var(--dim);}
+.g-del-sm{background:none;border:none;cursor:pointer;font-size:13px;color:var(--dim);padding:2px;flex-shrink:0;}
+.g-del-sm:hover{color:var(--urgent);}
+.gbtn{font-size:10px;font-weight:500;padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--cream);color:var(--mid);cursor:pointer;font-family:"DM Sans",sans-serif;transition:all .15s;white-space:nowrap;}
+.gbtn:hover{background:var(--mist);}
+.gbtn-assign{border-color:var(--sage-l);color:var(--sage);}
+.gbtn-assign:hover{background:var(--mist);border-color:var(--sage);}
+.gbtn-active{background:var(--sage);color:white;border-color:var(--sage);}
+.gbtn-active:hover{background:#5e7252;}
+.gbtn-rename{color:var(--mid);}
+.gbtn-del:hover{background:var(--urgent-bg);color:var(--urgent);border-color:var(--urgent);}
+.g-drop-sm{border:1.5px dashed var(--sage-l);border-radius:8px;padding:12px;text-align:center;cursor:pointer;transition:all .2s;background:var(--cream);margin-bottom:8px;}
+.g-drop-sm:hover,.g-drop-sm.drag{border-color:var(--sage);background:var(--mist);border-style:solid;}
+.g-drop-sm-text{font-size:11px;color:var(--mid);line-height:1.5;}
+.g-drop-sm-text strong{color:var(--sage);display:block;font-size:12px;margin-bottom:2px;}
+.toast{position:fixed;bottom:22px;right:22px;z-index:999;background:var(--stone);color:white;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:500;transform:translateY(60px);opacity:0;transition:all .3s;pointer-events:none;}
+.toast.show{transform:translateY(0);opacity:1;}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">M</div>
+    <div class="logo-name">Maestro <b>Ananta</b> · Gestor</div>
+  </div>
+  <div class="hpills">
+    <span style="font-size:12px;color:var(--mid);">💬 Comentarios &nbsp;|&nbsp; 📄 Guiones: <span id="guionCount" style="font-weight:600;color:var(--sage)">0</span></span>
+    <div class="hpill" id="hStats">Sin comentarios</div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- SIDEBAR: Comentarios -->
+  <div class="sb" id="sb">
+    <div class="sb-sec">
+      <div class="sb-label">📂 Cargar comentarios (JSON)</div>
+      <div class="drop" id="jsonDrop" onclick="document.getElementById('jsonFile').click()"
+           ondragover="e=>{e.preventDefault();document.getElementById('jsonDrop').classList.add('drag')}"
+           ondrop="handleJsonDrop(event)"
+           ondragleave="document.getElementById('jsonDrop').classList.remove('drag')">
+        <div class="drop-icon">📋</div>
+        <div class="drop-text">
+          <strong>Arrastra el JSON aquí</strong>
+          comments_VIDEOID.json
+        </div>
+      </div>
+      <input type="file" id="jsonFile" accept=".json" onchange="loadJson(event)">
+      <div id="jsonStatus"></div>
+    </div>
+
+    <div class="ftabs" id="fTabs" style="display:none">
+      <button class="tab active" onclick="setF('all',this)">Todos</button>
+      <button class="tab t-urg" onclick="setF('urgent',this)">🔴 Urgentes</button>
+      <button class="tab" onclick="setF('respond',this)">Responder</button>
+      <button class="tab" onclick="setF('cta',this)">CTA ❤️</button>
+      <button class="tab" onclick="setF('done',this)">✓ Listos</button>
+    </div>
+    <div class="sort-row" id="sRow" style="display:none">
+      <button class="sort-btn active" onclick="setS('newest',this)">Más nuevos</button>
+      <button class="sort-btn" onclick="setS('relevant',this)">Más relevantes</button>
+    </div>
+    <div class="clist" id="cList">
+      <div class="empty-sb">Carga el JSON de comentarios<br>para comenzar 🌿</div>
+    </div>
+  </div>
+
+  <!-- MAIN: COMENTARIOS VIEW -->
+  <div class="main" id="viewComentarios">
+    <div class="toolbar" id="toolbar" style="display:none">
+      <button class="btn btn-p" id="genBtn" onclick="generateSelected()">✦ Generar respuestas seleccionadas</button>
+      <button class="btn btn-s" onclick="exportCSV()">↓ CSV</button>
+      <button class="btn btn-s" onclick="resetAll()">🔄 Nuevo video</button>
+      <div class="tinfo" id="tInfo"></div>
+    </div>
+    <div id="debugBar" style="display:none;padding:6px 18px;background:#1a1a2e;color:#00ff88;font-family:monospace;font-size:11px;border-bottom:1px solid var(--border);overflow-x:auto;white-space:nowrap;"></div>
+    <div class="sel-row" id="selRow" style="display:none">
+      <input type="checkbox" class="sa-cb" id="saCb" onchange="selectAll(this.checked)">
+      <span>Seleccionar todos en vista actual</span>
+      <span class="sel-cnt" id="selCnt"></span>
+    </div>
+    <div class="area" id="area">
+      <div class="welcome">
+        <h1>Gestor de Comentarios 🌿</h1>
+        <p>Carga el JSON de comentarios de un video usando el descargador. Luego selecciona los que quieres responder y genera respuestas con el contexto del guion.</p>
+        <ul class="steps">
+          <li>Usa <strong>descargar_comentarios.html</strong> para obtener el JSON del video</li>
+          <li>Arrastra el JSON al panel izquierdo</li>
+          <li>Ve a <strong>Guiones</strong> y sube el .docx del guion del video</li>
+          <li>Selecciona comentarios y genera respuestas</li>
+          <li>Copia cada respuesta y marca como ✓ listo</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL DERECHO: Guiones (siempre visible) -->
+  <div class="sb-guion">
+    <div class="sb-guion-top">
+      <div class="sb-label" style="margin-bottom:8px;">📄 Guiones (<span id="guionListCount">0</span>)</div>
+
+      <!-- Video actual -->
+      <div id="vidCurrentInfo" style="font-size:11px;padding:6px 9px;background:var(--blue-bg);color:var(--blue);border-radius:6px;margin-bottom:8px;display:none;"></div>
+
+      <!-- Guion activo -->
+      <div id="guionActive" style="display:none;font-size:11px;padding:6px 9px;background:var(--green-bg);color:var(--green);border-radius:6px;margin-bottom:8px;"></div>
+
+      <!-- Subir archivo -->
+      <div class="g-drop-sm" id="guionDrop"
+           onclick="document.getElementById('guionFile').click()"
+           ondragover="e=>{e.preventDefault();document.getElementById('guionDrop').classList.add('drag')}"
+           ondrop="handleGuionDrop(event)"
+           ondragleave="document.getElementById('guionDrop').classList.remove('drag')">
+        <div class="g-drop-sm-text">
+          <strong>📄 Subir guion (.docx / .txt)</strong>
+          Arrastra o haz clic · varios a la vez
+        </div>
+      </div>
+      <input type="file" id="guionFile" accept=".docx,.txt" multiple onchange="loadGuiones(event)">
+    </div>
+    <div class="sb-guion-list">
+      <div id="guionList">
+        <div style="font-size:12px;color:var(--dim);font-style:italic;text-align:center;padding:20px 0;">
+          Aún no has cargado<br>ningún guion 🌿
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- POPUP SIN SELECCIÓN -->
+<div class="pop-ov" id="popOv" onclick="closePop()">
+  <div class="pop" onclick="event.stopPropagation()">
+    <div class="pop-icon">🌿</div>
+    <h3>Sin comentarios seleccionados</h3>
+    <p>Marca al menos un comentario con la casilla antes de generar respuestas.</p>
+    <button class="btn btn-p" onclick="closePop()" style="margin:0 auto">Entendido</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// SYSTEM PROMPT — Biblias del canal + reglas de respuesta
+// ════════════════════════════════════════════════════════════
+const SYS = `Eres el asistente del canal Maestro Ananta. Respondes comentarios EXACTAMENTE como el Maestro Ananta o alguien extremadamente cercano a él.
+
+IDENTIDAD CENTRAL:
+Maestro Ananta es una presencia sabia, cálida, espiritual y cercana. Canal = enseñanzas familiares, secretos ancestrales, remedios olvidados, conversaciones íntimas de generación en generación. Narrativa: "Mi abuelito, el Maestro Ananta, me enseñó..."
+El Maestro Ananta SIEMPRE está vivo. NUNCA hablar de él como fallecido.
+
+REGLAS ABSOLUTAS:
+- NUNCA: "como IA", "el canal", "el equipo", "la página", "según el documento"
+- SIEMPRE primera persona: "me alegra", "te abrazo", "gracias por acompañarme", "me emociona leerte"
+- NO: "cura", "garantizado", "milagroso", "elimina enfermedades", "100% efectivo"
+- SÍ: bienestar, descanso, calma, alivio, armonía, cuidado, apoyo natural
+- LENGUAJE SEGURO: "Muchas personas utilizan..." / "Puede ayudar..." / "Según enseñanzas ancestrales..."
+- NUNCA: "cura el cáncer", "elimina diabetes", "los médicos ocultan"
+
+PÚBLICO: Mujeres 45+, espirituales, cansadas emocionalmente, nostálgicas, buscan esperanza. México, Colombia, Perú, Puerto Rico, EEUU.
+
+TONO: humano, íntimo, suave, protector, emocional, sabio, pausado, espiritual, cálido. NUNCA agresivo, médico, corporativo.
+
+ESTRUCTURA OBLIGATORIA DE CADA RESPUESTA:
+1. Nombre real de la persona (preferir nombre antes que @). Ej: "María 🌿"
+2. Validar emocionalmente
+3. Responder basándose en el guion/contexto del video
+4. Cerrar cálidamente con emoji 🌿❤️🙏
+
+CTA DEL VIDEO: Si el comentario ES el CTA exacto ("salud", "abundancia", "calma", "me libero" y variaciones) → CORAZON, sin texto.
+
+URGENTES: Si comparten dolor, enfermedad, ansiedad, tristeza, pérdidas, soledad → respuesta MÁS larga, MÁS humana. Que se sientan escuchados y abrazados.
+
+REDIRIGIR: Si preguntan sobre otro tema → redirigir suavemente: "Con el tiempo he compartido muchísimos rituales y remedios para distintos momentos del cuerpo y del alma 🙏✨ Revisa con calma los videos de mi canal 🌿"
+
+LIBRO: Si preguntan dónde comprar → https://go.hotmart.com/K104790777T (natural y cálido)
+
+FORMATO DE SALIDA (exacto, sin variaciones):
+ACCIÓN: [RESPONDER / CORAZON / LIKE / IGNORAR]
+PRIORIDAD: [URGENTE / ALTA / NORMAL / BAJA]
+MOTIVO_SKIP: [solo si IGNORAR, máximo 8 palabras]
+RESPUESTA:
+[texto completo, vacío si CORAZON/LIKE/IGNORAR]
+
+CLASIFICACIÓN:
+- CTA exacto → CORAZON BAJA
+- Agradecimiento simple <35 chars → CORAZON BAJA
+- Pregunta sobre el video → RESPONDER ALTA
+- Pregunta otro tema → RESPONDER + redirigir NORMAL
+- Dolor/enfermedad/tristeza → RESPONDER URGENTE
+- Spam/ofensivo → IGNORAR
+- Pregunta sobre el libro → RESPONDER + link ALTA`;
+
+// ════════════════════════════════════════════════════════════
+// ESTADO GLOBAL
+// ════════════════════════════════════════════════════════════
+const DONE_KEY = 'ma_done_v5';
+const GUION_KEY = 'ma_guiones_v1';
+let all = [], filtered = [], curF = 'all', curS = 'newest';
+let vidId = '', vidTitle = '';
+let checked = new Set();
+let guiones = {}; // { videoTitle: { titulo, guion, fecha, chars } }
+let currentGuion = null; // guion activo para el video cargado
+
+// ════════════════════════════════════════════════════════════
+// GUIONES — cargar y persistir
+// ════════════════════════════════════════════════════════════
+function loadGuionesDB() {
+  try { guiones = JSON.parse(localStorage.getItem(GUION_KEY) || '{}'); }
+  catch { guiones = {}; }
+  renderGuionList();
+}
+
+function saveGuionesDB() {
+  try { localStorage.setItem(GUION_KEY, JSON.stringify(guiones)); }
+  catch(e) { showToast('⚠️ Error guardando guion: ' + e.message); }
+}
+
+function handleGuionDrop(e) {
+  e.preventDefault();
+  document.getElementById('guionDrop').classList.remove('drag');
+  const files = Array.from(e.dataTransfer.files);
+  processGuionFiles(files);
+}
+
+function loadGuiones(e) {
+  const files = Array.from(e.target.files);
+  processGuionFiles(files);
+  e.target.value = '';
+}
+
+async function processGuionFiles(files) {
+  let count = 0;
+  showToast(`⏳ Leyendo ${files.length} archivo${files.length>1?'s':''}...`);
+
+  for (const file of files) {
+    const titulo = file.name.replace(/\.(docx|txt)$/i, '').trim();
+    let texto = '';
+
+    if (file.name.endsWith('.txt')) {
+      texto = await file.text();
+    } else if (file.name.endsWith('.docx')) {
+      showToast(`⏳ Leyendo: ${file.name.slice(0,40)}...`);
+      texto = await extraerTextoDocx(file);
+    }
+
+    if (!texto || texto.length < 20) {
+      showToast(`⚠️ ${file.name.slice(0,40)}: no se pudo leer el contenido`);
+      continue;
+    }
+
+    guiones[titulo] = {
+      titulo: titulo,
+      guion: texto,
+      chars: texto.length,
+      savedAt: new Date().toISOString()
+    };
+    count++;
+  }
+
+  saveGuionesDB();
+  renderGuionList();
+  updateGuionCount();
+
+  if (count > 0) {
+    showToast(`✓ ${count} guion${count > 1 ? 'es' : ''} guardado${count > 1 ? 's' : ''}`);
+    // Si hay un video cargado, buscar si algún guion corresponde
+    if (vidTitle) matchGuion();
+  }
+}
+
+async function extraerTextoDocx(file) {
+  // Usar mammoth.js para leer el .docx directamente en el navegador (sin API)
+  try {
+    const ab = await file.arrayBuffer();
+    const result = await mammoth.extractRawText({ arrayBuffer: ab });
+    const texto = result.value || '';
+    if (result.messages && result.messages.length > 0) {
+      console.log('Mammoth warnings:', result.messages);
+    }
+    return texto.trim();
+  } catch(e) {
+    console.error('Error leyendo .docx con mammoth:', e);
+    // Fallback: intentar leerlo como texto plano
+    try {
+      return await file.text();
+    } catch(e2) {
+      return '';
+    }
+  }
+}
+
+function renderGuionList() {
+  const el = document.getElementById('guionList');
+  const keys = Object.keys(guiones);
+  document.getElementById('guionListCount').textContent = keys.length;
+
+  if (!keys.length) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--dim);font-style:italic;text-align:center;padding:24px 0;">Aún no has cargado ningún guion 🌿</div>';
+    return;
+  }
+
+  el.innerHTML = keys.sort().map(k => {
+    const g = guiones[k];
+    const fecha = g.savedAt ? new Date(g.savedAt).toLocaleDateString('es', { day: 'numeric', month: 'short' }) : '';
+    const isActive = currentGuion && currentGuion.titulo === k;
+    const kEsc = k.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    return `<div class="g-card-sm ${isActive ? 'active' : ''}">
+      <div style="flex:1;min-width:0">
+        <div class="g-title-sm" style="${isActive?'color:var(--sage)':''}">
+          ${isActive ? '▶ ' : ''}${k.slice(0,42)}${k.length>42?'…':''}
+        </div>
+        <div class="g-meta-sm">${(g.chars/1000).toFixed(1)}k chars · ${fecha}</div>
+        <div style="display:flex;gap:4px;margin-top:5px;flex-wrap:wrap;">
+          <button class="gbtn gbtn-assign ${isActive?'gbtn-active':''}"
+            onclick="asignarGuion('${kEsc}')">
+            ${isActive ? '✓ Asignado' : '▶ Usar este'}
+          </button>
+          <button class="gbtn gbtn-rename" onclick="renombrarGuion('${kEsc}')">✏️</button>
+          <button class="gbtn gbtn-del" onclick="deleteGuion('${kEsc}')">🗑</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function deleteGuion(titulo) {
+  if (!confirm(`¿Eliminar el guion "${titulo}"?`)) return;
+  delete guiones[titulo];
+  saveGuionesDB();
+  renderGuionList();
+  updateGuionCount();
+  if (currentGuion?.titulo === titulo) {
+    currentGuion = null;
+    renderContent();
+  }
+  showToast('✓ Guion eliminado');
+}
+
+function asignarGuion(titulo) {
+  const g = guiones[titulo];
+  if (!g) return;
+  currentGuion = g;
+  // Update active badge
+  const activeEl = document.getElementById('guionActive');
+  if (activeEl) {
+    activeEl.style.display = 'block';
+    activeEl.textContent = '▶ Activo: ' + titulo.slice(0,35) + (titulo.length > 35 ? '…' : '');
+  }
+  renderGuionList();
+  renderContent();
+  showToast('✓ Guion asignado a este video');
+}
+
+function renombrarGuion(titulo) {
+  const nuevoNombre = prompt(`Renombrar guion:\n\nNombre actual:\n"${titulo}"\n\nNuevo nombre:`, titulo);
+  if (!nuevoNombre || nuevoNombre.trim() === titulo) return;
+  const nuevo = nuevoNombre.trim();
+  if (guiones[nuevo]) {
+    alert('Ya existe un guion con ese nombre.');
+    return;
+  }
+  guiones[nuevo] = { ...guiones[titulo], titulo: nuevo };
+  delete guiones[titulo];
+  if (currentGuion?.titulo === titulo) currentGuion = guiones[nuevo];
+  saveGuionesDB();
+  renderGuionList();
+  updateGuionCount();
+  showToast('✓ Guion renombrado');
+}
+
+function updateGuionCount() {
+  const count = Object.keys(guiones).length;
+  const el = document.getElementById('guionCount');
+  if (el) el.textContent = count;
+  const el2 = document.getElementById('guionListCount');
+  if (el2) el2.textContent = count;
+}
+
+// ════════════════════════════════════════════════════════════
+// MATCH GUION CON VIDEO
+// ════════════════════════════════════════════════════════════
+function matchGuion() {
+  if (!vidTitle) return;
+  currentGuion = null;
+
+  // Búsqueda exacta primero
+  if (guiones[vidTitle]) {
+    currentGuion = guiones[vidTitle];
+    console.log('✓ Guion exacto:', vidTitle);
+    return;
+  }
+
+  // Búsqueda flexible — normalizar y comparar
+  const norm = t => t.toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim();
+  const vidNorm = norm(vidTitle);
+
+  let bestMatch = null;
+  let bestScore = 0;
+
+  for (const [titulo, data] of Object.entries(guiones)) {
+    const tNorm = norm(titulo);
+    // Score basado en palabras en común
+    const vidWords = new Set(vidNorm.split(' ').filter(w => w.length > 3));
+    const tWords = new Set(tNorm.split(' ').filter(w => w.length > 3));
+    const common = [...vidWords].filter(w => tWords.has(w)).length;
+    const score = vidWords.size > 0 ? common / vidWords.size : 0;
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestMatch = { titulo, data, score };
+    }
+  }
+
+  if (bestMatch && bestMatch.score >= 0.6) {
+    currentGuion = bestMatch.data;
+    console.log(`✓ Guion aproximado (${Math.round(bestMatch.score * 100)}%):`, bestMatch.titulo);
+  } else {
+    currentGuion = null;
+  }
+  // Update guion active badge
+  const activeEl = document.getElementById('guionActive');
+  if (activeEl) {
+    if (currentGuion) {
+      activeEl.style.display = 'block';
+      activeEl.textContent = '▶ Activo: ' + currentGuion.titulo.slice(0,35) + (currentGuion.titulo.length > 35 ? '…' : '');
+    } else {
+      activeEl.style.display = 'none';
+    }
+  }
+  renderGuionList();
+}
+
+// ════════════════════════════════════════════════════════════
+// CARGAR JSON DE COMENTARIOS
+// ════════════════════════════════════════════════════════════
+function handleJsonDrop(e) {
+  e.preventDefault();
+  document.getElementById('jsonDrop').classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file) loadJsonFile(file);
+}
+
+function loadJson(e) {
+  const file = e.target.files[0];
+  if (file) loadJsonFile(file);
+  e.target.value = '';
+}
+
+function loadJsonFile(file) {
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      const comments = Array.isArray(data) ? data : (data.comments || []);
+      if (!comments.length) throw new Error('El archivo no contiene comentarios.');
+
+      // Extraer video ID del nombre del archivo
+      const m = file.name.match(/comments_([^.]+)\.json/);
+      vidId = m ? m[1] : 'desconocido';
+
+      // Intentar obtener el título del video desde los comentarios o el nombre
+      // Se actualizará cuando matchGuion encuentre el guion
+      processComments(comments);
+
+      document.getElementById('jsonStatus').innerHTML =
+        `<div class="sbadge sb-ok">✓ ${comments.length} comentarios · ID: ${vidId}</div>`;
+
+      // Show current video in guion panel
+      const vidInfoEl = document.getElementById('vidCurrentInfo');
+      if (vidInfoEl) {
+        vidInfoEl.style.display = 'block';
+        vidInfoEl.innerHTML = `📹 Video: <strong>${vidId}</strong><br>
+          <span style="opacity:.8">Asigna un guion usando "▶ Usar este"</span>`;
+      }
+
+      switchView('comentarios', document.querySelector('.tab'));
+      showToast(`✓ ${comments.length} comentarios cargados`);
+    } catch(e) {
+      document.getElementById('jsonStatus').innerHTML =
+        `<div class="sbadge sb-err">❌ ${e.message}</div>`;
+      showToast('❌ ' + e.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function processComments(raw) {
+  const done = getDone();
+  const ctas = detectCTAs();
+
+  all = raw.map((c, i) => ({
+    id: c.id || `c_${i}`,
+    author: c.authorDisplayName || 'Usuario',
+    avatar: c.authorProfileImageUrl || '',
+    date: new Date(c.publishedAt || Date.now()),
+    text: (c.textDisplay || '').replace(/<br>/g, '\n').trim(),
+    isDone: done.has(c.id || `c_${i}`),
+    cat: classify(c.textDisplay || '', ctas),
+    resp: null, action: null, prio: null, skip: null
+  }));
+
+  checked.clear();
+
+  // Intentar match con guion cargado
+  // (vidTitle se infiere del guion si hay uno con el mismo ID)
+  matchGuionPorId();
+
+  updateUI();
+}
+
+function matchGuionPorId() {
+  // Buscar guion cuyo título contenga el vidId o viceversa
+  for (const [titulo, data] of Object.entries(guiones)) {
+    if (titulo.toLowerCase().includes(vidId.toLowerCase()) ||
+        vidId.toLowerCase().includes(titulo.toLowerCase())) {
+      currentGuion = data;
+      vidTitle = titulo;
+      return;
+    }
+  }
+  // Sin match automático — el usuario lo resolverá subiendo el guion
+  currentGuion = null;
+}
+
+function detectCTAs() {
+  // Detectar CTA del guion si está disponible
+  if (!currentGuion?.guion) return ['salud', 'amén', 'abundancia', 'calma'];
+  const g = currentGuion.guion.toLowerCase();
+  const m = g.match(/(?:escribe|comenta|di en voz alta|deja|responde|escrib[ai])\s*["""«»]?([a-záéíóúüñ\s]{1,20})["""«»]?/);
+  if (m) return [m[1].trim(), 'salud', 'amén', 'abundancia'];
+  return ['salud', 'amén', 'abundancia', 'calma'];
+}
+
+function classify(t, ctas) {
+  const s = t.toLowerCase().trim();
+  // CTA: solo si el comentario ES exactamente el CTA (con muy poca variación)
+  if (ctas.some(c => {
+    const cLower = c.toLowerCase().trim();
+    return s === cLower || s === cLower + '!' || s === cLower + ' !' ||
+           s === cLower + ' 🙏' || s === cLower + ' ❤️' || s === cLower + '❤' ||
+           (s.startsWith(cLower) && s.length <= cLower.length + 15 && !s.includes('?'));
+  })) return 'cta';
+
+  // Urgente: menciona situaciones personales difíciles
+  const uw = ['sufro','me duele','tengo dolor','enferm','operaci','cancer','diabet',
+    'ansiedad','depres','estoy triste','llorando','no puedo más','desesper',
+    'murió','falleció','perdí a','muy mal','me siento mal','sola no','ayúdenme'];
+  if (uw.some(w => s.includes(w)) && s.length > 30) return 'urgent';
+
+  // Agradecimiento simple MUY corto sin ninguna pregunta ni contenido
+  if (s.length < 20 && !s.includes('?') &&
+    ['gracias','bendiciones','dios te','amén','amen'].some(w => s.includes(w))) return 'cta';
+
+  // Todo lo demás: responder
+  return 'respond';
+}
+
+// ════════════════════════════════════════════════════════════
+// FILTERS & SORT
+// ════════════════════════════════════════════════════════════
+function setF(f, btn) {
+  curF = f; checked.clear();
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderList(); renderContent(); updSel();
+}
+function setS(s, btn) {
+  curS = s;
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderList(); renderContent();
+}
+function getFilt() {
+  let l = [...all];
+  if (curF === 'urgent') l = l.filter(c => c.cat === 'urgent');
+  else if (curF === 'respond') l = l.filter(c => c.cat === 'respond' && !c.isDone);
+  else if (curF === 'cta') l = l.filter(c => c.cat === 'cta');
+  else if (curF === 'done') l = l.filter(c => c.isDone);
+  else l = l.filter(c => !c.isDone);
+  if (curS === 'newest') l.sort((a, b) => b.date - a.date);
+  else { const p = {urgent:3, respond:2, cta:1}; l.sort((a, b) => (p[b.cat]||0) - (p[a.cat]||0) || b.date - a.date); }
+  return l;
+}
+
+// ════════════════════════════════════════════════════════════
+// CHECKBOXES
+// ════════════════════════════════════════════════════════════
+function toggleCk(id, v) {
+  v ? checked.add(id) : checked.delete(id);
+  document.getElementById('card-'+id)?.classList.toggle('ck-c', v);
+  updSel(); updSaState();
+}
+function selectAll(v) {
+  filtered.forEach(c => {
+    if (c.isDone) return;
+    v ? checked.add(c.id) : checked.delete(c.id);
+    const cb = document.getElementById('cb-'+c.id); if(cb) cb.checked = v;
+    const cbc = document.getElementById('cbc-'+c.id); if(cbc) cbc.checked = v;
+    document.getElementById('card-'+c.id)?.classList.toggle('ck-c', v);
+  });
+  updSel();
+}
+function updSel() { const el = document.getElementById('selCnt'); if(el) el.textContent = checked.size > 0 ? `${checked.size} seleccionados` : ''; }
+function updSaState() { const nd = filtered.filter(c => !c.isDone); const cb = document.getElementById('saCb'); if(cb) cb.checked = nd.length > 0 && nd.every(c => checked.has(c.id)); }
+
+// ════════════════════════════════════════════════════════════
+// GENERATE RESPONSES
+// ════════════════════════════════════════════════════════════
+async function generateSelected() {
+  if (checked.size === 0) { document.getElementById('popOv').classList.add('show'); return; }
+  const toProc = all.filter(c => checked.has(c.id) && !c.isDone);
+  if (!toProc.length) { showToast('Sin comentarios pendientes seleccionados'); return; }
+
+  const btn = document.getElementById('genBtn');
+  const debugBar = document.getElementById('debugBar');
+  btn.disabled = true;
+
+  function dbg(msg) {
+    if (debugBar) { debugBar.style.display = 'block'; debugBar.textContent = '🔍 ' + msg; }
+    console.log('[GESTOR]', msg);
+  }
+
+  // Reclasificar con CTAs actuales
+  const ctas = detectCTAs();
+  dbg('Procesando ' + toProc.length + ' comentarios. CTAs: [' + ctas.join(', ') + ']');
+
+  // Reclasificar todos los seleccionados
+  toProc.forEach(c => { c.cat = classify(c.text, ctas); });
+
+  // Pre-clasificar CTAs localmente sin API
+  toProc.filter(c => c.cat === 'cta').forEach(c => {
+    c.action = 'CORAZON'; c.prio = 'BAJA'; c.resp = 'CTA'; c.skip = 'CTA del video';
+  });
+
+  const needs = toProc.filter(c => c.cat !== 'cta');
+  dbg('CTAs: ' + (toProc.length - needs.length) + ' | Responder: ' + needs.length);
+
+  if (needs.length === 0) {
+    toProc.forEach(c => updCard(c));
+    btn.disabled = false;
+    document.getElementById('tInfo').textContent = String.fromCharCode(10003) + ' ' + toProc.length + ' CTAs marcados';
+    showToast(String.fromCharCode(10003) + ' Marcados con corazon');
+    return;
+  }
+
+  const videoCtx = currentGuion
+    ? ('TITULO DEL VIDEO: "' + currentGuion.titulo + '"\n\nGUION DEL VIDEO:\n' + currentGuion.guion.slice(0, 3000))
+    : ('TITULO DEL VIDEO: "' + (vidTitle || vidId) + '"\n\nSin guion - usa el contexto general del canal Maestro Ananta');
+
+  let n = 0;
+  for (const c of needs) {
+    c.resp = 'loading'; c.action = null;
+    updCard(c);
+    document.getElementById('tInfo').textContent = 'Generando ' + (++n) + '/' + needs.length + '...';
+    dbg('Llamando API para: ' + c.author + ': ' + c.text.slice(0,50));
+
+    const userMsg = videoCtx + '\n\nCOMENTARIO A RESPONDER:\nUsername: ' + c.author + '\nTexto: "' + c.text + '"\n\nClasifica y genera la respuesta segun el formato indicado.';
+
+    try {
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          system: SYS,
+          messages: [{ role: 'user', content: userMsg }]
+        })
+      });
+
+      dbg('API status: ' + r.status);
+
+      if (!r.ok) {
+        const errTxt = await r.text();
+        dbg('ERROR ' + r.status + ': ' + errTxt.slice(0,100));
+        c.resp = 'Error ' + r.status + ': ' + errTxt.slice(0, 300);
+        c.action = 'RESPONDER';
+      } else {
+        const d = await r.json();
+        const txt = (d.content && d.content[0] && d.content[0].text) ? d.content[0].text : '';
+        dbg('Recibido: ' + txt.slice(0,80));
+        if (!txt) {
+          c.resp = 'API respondio vacio. Revisa la consola.';
+          c.action = 'RESPONDER';
+        } else {
+          parseResp(c, txt);
+          dbg('Parsed: accion=' + c.action + ' | resp=' + c.resp.slice(0,50));
+        }
+      }
+    } catch(e) {
+      dbg('CATCH: ' + e.message);
+      c.resp = 'Error de conexion: ' + e.message;
+      c.action = 'RESPONDER';
+    }
+
+    updCard(c);
+    updSbItem(c);
+    await sleep(400);
+  }
+
+  toProc.filter(c => c.cat === 'cta').forEach(c => updCard(c));
+
+  btn.disabled = false;
+  document.getElementById('tInfo').textContent = String.fromCharCode(10003) + ' ' + toProc.length + ' procesados';
+  dbg('Completado. ' + needs.length + ' respuestas generadas.');
+  showToast(String.fromCharCode(10003) + ' ' + toProc.length + ' comentarios procesados');
+}
+
+
+function parseResp(c, txt) {
+  const am = txt.match(/ACCIÓN:\s*(.+)/i);
+  const pm = txt.match(/PRIORIDAD:\s*(.+)/i);
+  const sm = txt.match(/MOTIVO_SKIP:\s*(.+)/i);
+  const rm = txt.match(/RESPUESTA:\s*([\s\S]*)$/i);
+  c.action = (am?.[1]?.trim() || 'RESPONDER').toUpperCase()
+    .replace('CORAZÓN', 'CORAZON').replace('CORAZ\u00d3N', 'CORAZON');
+  c.prio = (pm?.[1]?.trim() || 'NORMAL').toUpperCase();
+  c.skip = sm?.[1]?.trim() || '';
+  c.resp = rm?.[1]?.trim() || '';
+}
+
+async function regen(id) {
+  const c = all.find(x => x.id === id); if (!c) return;
+  c.resp = 'loading'; c.action = null; updCard(c);
+  const videoCtx = currentGuion
+    ? `TÍTULO: "${currentGuion.titulo}"\nGUIÓN: ${currentGuion.guion.slice(0, 2000)}`
+    : `TÍTULO: "${vidTitle || vidId}"\n(Sin guion)`;
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514', max_tokens: 800, system: SYS,
+        messages: [{ role: 'user', content: `${videoCtx}\n\nCOMENTARIO:\nUsername: ${c.author}\nTexto: "${c.text}"\n\nGenera una respuesta diferente, más creativa y cálida.` }]
+      })
+    });
+    if (!r.ok) {
+      const errTxt = await r.text();
+      c.resp = `Error ${r.status}: ${errTxt.slice(0,200)}`; c.action = 'RESPONDER';
+    } else {
+      const d = await r.json();
+      parseResp(c, d.content?.[0]?.text || '');
+    }
+  } catch(e) { 
+    console.error('Regen error:', e);
+    c.resp = `Error: ${e.message}`; c.action = 'RESPONDER'; 
+  }
+  updCard(c);
+}
+
+// ════════════════════════════════════════════════════════════
+// MARK DONE
+// ════════════════════════════════════════════════════════════
+function markDone(id) {
+  const ids = getDone(); ids.add(id);
+  try { localStorage.setItem(DONE_KEY, JSON.stringify([...ids])); } catch {}
+  const c = all.find(x => x.id === id);
+  if (c) { c.isDone = true; updCard(c); updSbItem(c); }
+  showToast('✓ Marcado como listo');
+}
+function getDone() { try { return new Set(JSON.parse(localStorage.getItem(DONE_KEY) || '[]')); } catch { return new Set(); } }
+
+// ════════════════════════════════════════════════════════════
+// RENDER
+// ════════════════════════════════════════════════════════════
+function renderList() {
+  filtered = getFilt();
+  const el = document.getElementById('cList');
+  if (!filtered.length) { el.innerHTML = '<div class="empty-sb" style="padding:26px 12px">Sin comentarios en esta categoría</div>'; return; }
+  el.innerHTML = filtered.map(c => {
+    const isU = c.cat === 'urgent'; const ck = checked.has(c.id);
+    const badge = c.isDone ? '<span class="bm bm-d">✓</span>'
+      : isU ? '<span class="bm bm-u">urgente</span>'
+      : c.cat === 'cta' ? '<span class="bm bm-c">CTA</span>'
+      : (c.resp && c.action) ? '<span class="bm bm-g">✦</span>' : '';
+    return `<div class="ci ${c.isDone?'done':''} ${isU&&!c.isDone?'u-urg':''}" id="it-${c.id}" onclick="scrollTo2('${c.id}')">
+      <input type="checkbox" class="icb" id="cb-${c.id}" ${ck?'checked':''} ${c.isDone?'disabled':''}
+        onclick="event.stopPropagation();toggleCk('${c.id}',this.checked);syncCbCard('${c.id}',this.checked)">
+      <div class="ibody">
+        <div class="iaut">${c.author} ${badge}</div>
+        <div class="itxt">${c.text.replace(/\n/g,' ')}</div>
+        <div class="idate">${fmtDate(c.date)}</div>
+      </div>
+    </div>`;
+  }).join('');
+  updSaState();
+}
+
+function renderContent() {
+  const area = document.getElementById('area');
+  if (!all.length) {
+    area.innerHTML = `<div class="welcome"><h1>Gestor de Comentarios 🌿</h1><p>Carga el JSON de comentarios de un video usando el descargador. Luego selecciona los que quieres responder y genera respuestas con el contexto del guion.</p><ul class="steps"><li>Usa <strong>descargar_comentarios.html</strong> para obtener el JSON del video</li><li>Arrastra el JSON al panel izquierdo</li><li>Ve a <strong>Guiones</strong> y sube el .docx del guion del video</li><li>Selecciona comentarios y genera respuestas</li><li>Copia cada respuesta y marca como ✓ listo</li></ul></div>`;
+    return;
+  }
+
+  const pend = all.filter(c => !c.isDone);
+  const urg = pend.filter(c => c.cat === 'urgent');
+  const rsp = pend.filter(c => c.cat === 'respond');
+  const cta = pend.filter(c => c.cat === 'cta');
+  const done = all.filter(c => c.isDone);
+
+  const guionBanner = currentGuion
+    ? `<div class="ctx-prev"><strong>📄 Guion activo: ${currentGuion.titulo.slice(0,60)}</strong><br>${currentGuion.guion.slice(0,200)}…</div>`
+    : `<div class="ctx-prev" style="border-color:#f9a825;background:#fff8e1;"><strong>⚠️ Sin guion asignado</strong>En el panel derecho, sube el guion del video y presiona <strong>"▶ Usar este"</strong> para asignarlo. Las respuestas se generarán con contexto general del canal.</div>`;
+
+  const hdr = `<div class="bhdr">
+    <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;margin-bottom:2px">${currentGuion?.titulo || vidTitle || 'Video ' + vidId}</div>
+    <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">ID: ${vidId}</div>
+    <div class="bstats">
+      <div class="sbox"><div class="sn" style="color:var(--urgent)">${urg.length}</div><div class="sl">Urgentes</div></div>
+      <div class="sbox"><div class="sn" style="color:var(--blue)">${rsp.length}</div><div class="sl">Responder</div></div>
+      <div class="sbox"><div class="sn" style="color:var(--heart)">${cta.length}</div><div class="sl">CTA ❤️</div></div>
+      <div class="sbox"><div class="sn" style="color:var(--green)">${done.length}</div><div class="sl">Ya listos</div></div>
+      <div class="sbox"><div class="sn">${all.length}</div><div class="sl">Total</div></div>
+    </div>
+    ${guionBanner}
+    ${done.length > 0 ? `<div style="margin-top:8px;font-size:12px;color:var(--green);background:var(--green-bg);padding:5px 11px;border-radius:6px;display:inline-block">✓ ${done.length} ya respondidos — omitidos automáticamente</div>` : ''}
+  </div>`;
+
+  const cards = getFilt().map(c => buildCard(c)).join('');
+  area.innerHTML = hdr + (cards || '<div style="text-align:center;padding:44px;color:var(--dim);font-family:Cormorant Garamond,serif;font-size:17px;font-weight:300">Sin comentarios en esta vista 🌿</div>');
+}
+
+function buildCard(c) {
+  const isU = c.cat === 'urgent'; const ck = checked.has(c.id);
+  const avI = c.avatar ? `<img src="${c.avatar}" alt="" onerror="this.style.display='none'">` : (c.author.replace('@','')[0]||'U').toUpperCase();
+  const ab = c.action ? getAB(c.action, c.prio) : '';
+  let rs = '';
+  if (c.resp === 'loading') rs = `<div class="gind"><div class="dp"><span></span><span></span><span></span></div>Generando respuesta con contexto del guion...</div>`;
+  else if (c.action === 'CORAZON') rs = `<div class="ra"><div class="ra-label ra-corazon">❤️ Corazón</div><div class="ra-sublabel">${c.skip || 'Dale corazón a este comentario'}</div><div class="ract" style="margin-top:8px">${!c.isDone?`<button class="btn btn-s" onclick="markDone('${c.id}')">✓ Listo</button>`:'<span style="color:var(--green);font-size:12px;font-weight:500">✓ Listo</span>'}</div></div>`;
+  else if (c.action === 'LIKE') rs = `<div class="ra"><div class="ra-label ra-like">👍 Like</div><div class="ra-sublabel">${c.skip || 'Dale like a este comentario'}</div><div class="ract" style="margin-top:8px">${!c.isDone?`<button class="btn btn-s" onclick="markDone('${c.id}')">✓ Listo</button>`:'<span style="color:var(--green);font-size:12px;font-weight:500">✓ Listo</span>'}</div></div>`;
+  else if (c.action === 'IGNORAR') rs = `<div class="ra"><div class="ra-label ra-ignorar">⊘ No responder</div><div class="ra-sublabel">${c.skip || 'Este comentario no requiere respuesta'}</div></div>`;
+  else if (c.action === 'RESPONDER') rs = `<div class="ra"><div class="rl">Respuesta sugerida</div><div class="rt" id="rsp-${c.id}">${c.resp || "(Sin texto de respuesta — revisa la consola)"}</div>${c.skip?`<div class="rn">💡 ${c.skip}</div>`:''}<div class="ract"><button class="btn btn-p" onclick="copyR('${c.id}')">Copiar</button>${!c.isDone?`<button class="btn btn-s" onclick="markDone('${c.id}')">✓ Listo</button>`:'<span style="color:var(--green);font-size:12px;font-weight:500">✓ Listo</span>'}<button class="btn btn-s" onclick="regen('${c.id}')">↺ Regenerar</button></div></div>`;
+  return `<div class="cc ${isU?'urg':''} ${c.isDone?'done-c':''} ${ck?'ck-c':''}" id="card-${c.id}">
+    <div class="ct">
+      <input type="checkbox" class="cc-cb" id="cbc-${c.id}" ${ck?'checked':''} ${c.isDone?'disabled':''}
+        onchange="toggleCk('${c.id}',this.checked);const s=document.getElementById('cb-${c.id}');if(s)s.checked=this.checked;">
+      <div class="av">${avI}</div>
+      <div class="cm"><div class="ca">${c.author} ${ab}</div><div class="cd">${fmtDate(c.date)}</div></div>
+    </div>
+    <div class="ctxt">${c.text.replace(/\n/g,'<br>')}</div>
+    ${rs}
+  </div>`;
+}
+
+function getAB(a, p) {
+  if (p === 'URGENTE') return '<span class="ab ab-u">🔴 Urgente</span>';
+  if (a === 'RESPONDER') return '<span class="ab ab-r">Responder</span>';
+  if (a === 'CORAZON') return '<span class="ab ab-h">❤️ Corazón</span>';
+  if (a === 'LIKE') return '<span class="ab ab-l">👍 Like</span>';
+  if (a === 'IGNORAR') return '<span class="ab ab-i">⊘ Omitir</span>';
+  return '';
+}
+
+function updCard(c) {
+  const o = document.getElementById('card-'+c.id); if(!o) return;
+  const t = document.createElement('div'); t.innerHTML = buildCard(c); o.replaceWith(t.firstChild);
+}
+function updSbItem(c) {
+  const el = document.getElementById('it-'+c.id); if(!el) return;
+  const a = el.querySelector('.iaut');
+  if (a && c.resp && c.action && !a.querySelector('.bm-g')) a.insertAdjacentHTML('beforeend', '<span class="bm bm-g">✦</span>');
+}
+function scrollTo2(id) { document.getElementById('card-'+id)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+
+function updateUI() {
+  const pend = all.filter(c => !c.isDone); const urg = pend.filter(c => c.cat === 'urgent');
+  document.getElementById('hStats').textContent = `${all.length} comentarios · ${pend.length} pendientes · ${urg.length} urgentes`;
+  ['fTabs','sRow','toolbar','selRow'].forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'flex'; });
+  document.getElementById('tInfo').textContent = `${pend.length} pendientes`;
+  filtered = getFilt(); renderList(); renderContent(); updSel();
+}
+
+// ════════════════════════════════════════════════════════════
+// UTILITIES
+// ════════════════════════════════════════════════════════════
+function copyR(id) {
+  const el = document.getElementById('rsp-'+id); if(!el) return;
+  navigator.clipboard.writeText(el.textContent).then(() => showToast('✓ Respuesta copiada'));
+}
+
+function exportCSV() {
+  const d = all.filter(c => c.resp || c.action); if (!d.length) { showToast('Sin respuestas generadas'); return; }
+  const rows = ['ID,Username,Fecha,Comentario,Acción,Prioridad,Respuesta'];
+  d.forEach(c => rows.push([c.id, c.author, c.date.toISOString(), `"${c.text.replace(/"/g,'""')}"`, c.action||'', c.prio||'', `"${(c.resp||'').replace(/"/g,'""')}"`].join(',')));
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([rows.join('\n')], { type: 'text/csv' }));
+  a.download = `respuestas_${vidId}_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+  showToast('✓ CSV exportado');
+}
+
+function resetAll() {
+  if (all.length && !confirm('¿Limpiar comentarios y cargar un video nuevo?')) return;
+  all = []; filtered = []; checked.clear(); vidId = ''; vidTitle = ''; currentGuion = null;
+  ['fTabs','sRow','toolbar','selRow'].forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'none'; });
+  document.getElementById('cList').innerHTML = '<div class="empty-sb">Carga el JSON de comentarios<br>para comenzar 🌿</div>';
+  document.getElementById('jsonStatus').innerHTML = '';
+  document.getElementById('hStats').textContent = 'Sin comentarios';
+  renderContent(); showToast('✓ Listo para nuevo video');
+}
+
+function switchView(view, btn) {
+  // No-op: layout is now always 3 columns
+}
+
+function syncCbCard(id, v) {
+  const cbc = document.getElementById('cbc-'+id);
+  if (cbc) cbc.checked = v;
+  document.getElementById('card-'+id)?.classList.toggle('ck-c', v);
+}
+
+function syncCbSidebar(id, v) {
+  const cb = document.getElementById('cb-'+id);
+  if (cb) cb.checked = v;
+}
+
+function closePop() { document.getElementById('popOv').classList.remove('show'); }
+function fmtDate(d) {
+  const df = Date.now() - d;
+  if (df < 3600000) return `hace ${Math.floor(df/60000)}m`;
+  if (df < 86400000) return `hace ${Math.floor(df/3600000)}h`;
+  if (df < 604800000) return `hace ${Math.floor(df/86400000)}d`;
+  return d.toLocaleDateString('es', { day:'numeric', month:'short', year:'numeric' });
+}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function showToast(msg, duration) {
+  const t = document.getElementById('toast'); t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), duration || 3000);
+}
+
+// ════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════
+
+// Detect if running locally (file://) and warn about API access
+(async function checkApiAccess() {
+  if (location.protocol === 'file:') {
+    // Show persistent warning
+    const warn = document.createElement('div');
+    warn.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#7a5c00;color:white;padding:10px 20px;font-size:12px;z-index:9999;text-align:center;font-family:DM Sans,sans-serif;';
+    warn.innerHTML = '⚠️ Archivo abierto localmente — las respuestas de IA pueden no funcionar por restricciones del navegador. <strong>Para que funcione: abre el archivo desde un servidor o úsalo dentro de Claude.ai</strong>';
+    document.body.appendChild(warn);
+  } else {
+    // Test API connectivity silently
+    try {
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'anthropic-dangerous-direct-browser-access': 'true' },
+        body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 10, messages: [{ role: 'user', content: 'test' }] })
+      });
+      if (r.ok || r.status === 400) {
+        console.log('✅ API accesible');
+      }
+    } catch(e) {
+      console.warn('API no accesible:', e.message);
+      showToast('⚠️ API no accesible. Revisa la conexión.', 5000);
+    }
+  }
+})();
+
+loadGuionesDB();
+updateGuionCount();
+</script>
+</body>
+</html>
